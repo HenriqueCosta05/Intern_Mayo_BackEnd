@@ -18,14 +18,6 @@ export class ValidationHelper {
     return value.trim().length > 0;
   }
 
-  static isValidUser(user: User): boolean {
-    return (
-      this.isValidEmail(user.email) &&
-      this.isStrongPassword(user.password) &&
-      this.isNonEmptyString(user.username)
-    );
-  }
-
   static exists(user: User): boolean {
     return user !== null;
   }

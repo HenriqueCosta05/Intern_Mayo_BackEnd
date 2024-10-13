@@ -1,8 +1,8 @@
 export interface User {
-  id: string; //UUID
+  id?: string; //UUID
   username: string;
   password: string;
   email: string;
-  createdAt: Date
-  updatedAt: Date;
+  createdAt?: Date
+  updatedAt?: Date;
 }

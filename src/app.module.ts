@@ -9,21 +9,27 @@ import { AppService } from './app.service';
 import { UserService } from './models/user/user.service';
 import { PrismaService } from './common/services/prisma.service';
 import { UserController } from './models/user/user.controller';
+import { AuthController } from './authentication/auth.controller';
+import { AuthModule } from './authentication/auth.module';
+import { UserModule } from './models/user/user.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     CacheModule.register({
       store: redisStore as unknown as CacheStoreFactory,
       host: process.env.REDIS_HOST,
       port: process.env.REDIS_PORT,
       isGlobal: true,
     }),
+    AuthModule,
+    UserModule,
   ],
-  controllers: [AppController, UserController],
+  controllers: [AppController, UserController, AuthController],
   providers: [
     AppService,
-    UserService,
     PrismaService,
     {
       provide: APP_INTERCEPTOR,
@@ -44,6 +50,8 @@ export class AppModule {
           isGlobal: true,
           db: options.db,
         }),
+        AuthModule,
+        UserModule,
       ],
       controllers: [],
       providers: [

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './user.entity';
+import { User } from '@prisma/client';
 
 @Controller('user')
 export class UserController {
@@ -14,6 +14,11 @@ export class UserController {
   @Get(':id')
   async getUser(@Param('id') id: string): Promise<User> {
     return this._userService.findOne(id);
+  }
+
+  @Get(':email')
+  async getUserByEmail(@Param('email') email: string): Promise<User> {
+    return this._userService.findOneByEmail(email);
   }
 
   @Put(':id')

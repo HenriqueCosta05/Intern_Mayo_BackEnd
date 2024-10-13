@@ -1,31 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { User } from './user.entity';
-import { ValidationHelper } from 'src/common/helpers/exceptions/validation.helper';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { UserRepository } from './user.repository';
 import { ErrorHelper } from 'src/common/helpers/responses/error.helper';
+import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService implements UserRepository {
   constructor(private readonly _prisma: PrismaService) {}
 
   async create(user: User): Promise<User> {
-    console.log('Creating user:', user);
     try {
-      if (ValidationHelper.isValidUser(user)) {
+        user.password = await bcrypt.hash(user.password, 10);
         const createdUser = await this._prisma.user.create({
-          data: user,
+          data: {
+            email: user.email,
+            username: user.username,
+            password: user.password,
+          },
         });
         return createdUser;
-      } else {
-        throw ErrorHelper.generateError(
+
+        
+      } catch(error) {
+           throw ErrorHelper.generateError(
           'Dados de usuário não encontrados ou inválidos',
           400,
         );
-      }
-    } catch (error) {
-      console.error('Error ao criar usuário:', error);
-      throw error;
     }
   }
 
@@ -36,30 +37,32 @@ export class UserService implements UserRepository {
       },
     });
 
-    if (ValidationHelper.isValidUser(await user)) {
+    if (await user) {
       return Promise.resolve(user);
     } else {
       ErrorHelper.generateError('Usuário não encontrado', 404);
     }
   }
 
+  async findOneByEmail(email: string): Promise<User | null> {
+    const user = await this._prisma.user.findUnique({
+      where: { email },
+    });
+    if (!user) {
+      return null;
+    }
+    return user;
+  }
 
   async update(id: string, user: User): Promise<User> {
     try {
-      if (ValidationHelper.isValidUser(user)) {
-        const updatedUser = await this._prisma.user.update({
-          where: {
-            id: id,
-          },
-          data: user,
-        });
-        return updatedUser;
-      } else {
-        throw ErrorHelper.generateError(
-          'Dados de usuário não encontrados ou inválidos',
-          400,
-        );
-      }
+      const updatedUser = await this._prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: user,
+      });
+      return updatedUser;
     } catch (error) {
       console.error('Error ao atualizar usuário:', error);
       throw error;
