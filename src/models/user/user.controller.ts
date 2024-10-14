@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
+@UseInterceptors(CacheInterceptor)
 @Controller('user')
 export class UserController {
   constructor(private _userService: UserService) {}
@@ -11,6 +13,8 @@ export class UserController {
     return this._userService.create(user);
   }
 
+  @CacheTTL(0)
+  @CacheKey("USER")
   @Get(':id')
   async getUser(@Param('id') id: string): Promise<User> {
     return this._userService.findOne(id);
