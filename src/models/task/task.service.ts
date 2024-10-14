@@ -4,6 +4,7 @@ import { Task } from '@prisma/client';
 import { PrismaService } from 'src/common/services/prisma.service';
 import { ErrorHelper } from 'src/common/helpers/responses/error.helper';
 import { CreateTaskDto } from './dtos/create-task.dto';
+import { UpdateTaskDto } from './dtos/update-task.dto';
 
 @Injectable()
 export class TaskService implements TaskRepository{
@@ -23,7 +24,6 @@ export class TaskService implements TaskRepository{
                     }
                 
                     try {
-                        // Check if the user exists
                         const userExists = await this._prisma.user.findUnique({
                             where: { id: taskDto.userId }
                         });
@@ -35,7 +35,6 @@ export class TaskService implements TaskRepository{
                             return Promise.reject(new Error(errorMessage));
                         }
                 
-                        // Create the task
                         const createdTask = await this._prisma.task.create({
                             data: {
                                 title: taskDto.title,
@@ -62,6 +61,13 @@ export class TaskService implements TaskRepository{
                     id
                 }
             });
+            if(!task) {
+                            ErrorHelper.generateError(
+                              `Tarefa com id: ${id} não encontrada`,
+                              404,
+                            );
+                            return Promise.reject(null)
+            }
             return Promise.resolve(task);
         } catch (error) {
             ErrorHelper.generateError(`Ocorreu um erro: ${error}`, 400);
@@ -69,12 +75,23 @@ export class TaskService implements TaskRepository{
         }
     }
    
-    async findAll(): Promise<Task[]> {
-        const tasks = await this._prisma.task.findMany();
-        return Promise.resolve(tasks);
+        async findAll(): Promise<Task[]> {
+        try {
+            const tasks = await this._prisma.task.findMany();
+            if (!tasks || tasks.length === 0) {
+                const errorMessage = 'Nenhuma tarefa encontrada';
+                ErrorHelper.generateError(errorMessage, 404);
+                return Promise.reject(new Error(errorMessage));
+            }
+            return Promise.resolve(tasks);
+        } catch (error) {
+            console.error('An error occurred:', error);
+            ErrorHelper.generateError(`Ocorreu um erro: ${error.message}`, 500);
+            return Promise.reject(error);
+        }
     }
 
-    async update(id: string, task: Task): Promise<Task> {
+    async update(id: string, task: UpdateTaskDto): Promise<Task> {
         try {
             const updatedTask = await this._prisma.task.update({
                 where: {
