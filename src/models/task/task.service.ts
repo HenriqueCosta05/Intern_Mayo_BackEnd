@@ -81,7 +81,7 @@ export class TaskService implements TaskRepository{
             if (!tasks || tasks.length === 0) {
                 const errorMessage = 'Nenhuma tarefa encontrada';
                 ErrorHelper.generateError(errorMessage, 404);
-                return Promise.reject(new Error(errorMessage));
+                return Promise.resolve([]);
             }
             return Promise.resolve(tasks);
         } catch (error) {
